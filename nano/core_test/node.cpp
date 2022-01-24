@@ -1703,11 +1703,11 @@ TEST (node, unconfirmed_send)
 	ASSERT_TIMELY (10s, node2.balance (key2.pub) == 2 * nano::Mxrb_ratio);
 
 	// then send one of the received units back from node2 to node1
-    // by means of `node2.process` (not process_active)
+	// by means of `node2.process` (not process_active)
 	//
 	auto const latest = node2.latest (key2.pub);
 	auto send2 = nano::state_block_builder{}.make_block ().account (key2.pub).previous (latest).representative (nano::dev::genesis_key.pub).balance (nano::Mxrb_ratio).link (nano::dev::genesis->account ()).sign (key2.prv, key2.pub).work (*system.work.generate (latest)).build_shared ();
-	ASSERT_EQ(nano::process_result::progress, node2.process (*send2).code);
+	ASSERT_EQ (nano::process_result::progress, node2.process (*send2).code);
 	ASSERT_TIMELY (5s, node2.block_confirmed (send2->hash ()));
 	ASSERT_TIMELY (5s, node1.block_confirmed (send2->hash ()));
 
