@@ -643,10 +643,6 @@ TEST (confirmation_height, all_block_types)
 TEST (confirmation_height, conflict_rollback_cemented)
 {
 	auto test_mode = [] (nano::confirmation_height_mode mode_a) {
-		boost::iostreams::stream_buffer<nano::stringstream_mt_sink> stream_buffer{};
-		stream_buffer.open (nano::stringstream_mt_sink{});
-		nano::boost_log_cerr_redirect redirect_cerr{ &stream_buffer };
-
 		nano::system system{};
 
 		nano::node_flags node_flags{};
@@ -691,14 +687,6 @@ TEST (confirmation_height, conflict_rollback_cemented)
 		ASSERT_TIMELY (5s, (election = node1->active.election (send2->qualified_root ())) != nullptr);
 		ASSERT_EQ (1, election->votes ().size ());
 
-		// TODO: old code used to force-cement (by conf_height means, not by election means) send2 in both node1 and node2.
-		// QUESTIONS:
-		// - is it necessary to force-cement it in node1 as well? we can prove the test by only force cementing it in
-		//   node2, then the election gets confirmed and the log where we fail to remove already cemented send2
-		//   in node2 is found, everything looks good?
-		// - if we actually wanted to force-cemented send2 in node1, how to do it?
-		//   process_confirmed doesn't do anything as it already sees it's a fork with send1 and there's an election active
-
 		node2->process_confirmed (nano::election_status{ send2 });
 		ASSERT_TIMELY (5s, node2->block_confirmed (send2->hash ()));
 
@@ -707,8 +695,7 @@ TEST (confirmation_height, conflict_rollback_cemented)
 		ASSERT_NE (nullptr, winner);
 		ASSERT_EQ (*winner, *send1);
 
-		auto rollback_log_entry = boost::str (boost::format ("Failed to roll back %1%") % send2->hash ().to_string ());
-		ASSERT_TIMELY (20s, stream_buffer.component ()->str ().find (rollback_log_entry) != std::string::npos);
+		ASSERT_TIMELY (5s, 1 == node2->stats.count (nano::stat::type::ledger, nano::stat::detail::rollback_failed));
 
 		auto const tally = election->tally ();
 		ASSERT_FALSE (tally.empty ());
