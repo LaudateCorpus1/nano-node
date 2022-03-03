@@ -695,7 +695,7 @@ TEST (confirmation_height, conflict_rollback_cemented)
 		ASSERT_NE (nullptr, winner);
 		ASSERT_EQ (*winner, *send1);
 
-		ASSERT_TIMELY (5s, 1 == node2->stats.count (nano::stat::type::ledger, nano::stat::detail::rollback_failed));
+		ASSERT_TIMELY (5ss, 1 == node2->stats.count (nano::stat::type::ledger, nano::stat::detail::rollback_failed));
 
 		auto const tally = election->tally ();
 		ASSERT_FALSE (tally.empty ());
